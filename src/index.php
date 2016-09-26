@@ -59,7 +59,7 @@ if(isSet($_POST['btnEnviar'])){
     }
   ?>
   <div class="login-logo">
-    <a href="index.php"><b>Acesso</b>Geek</a>
+    <a href="index.php"><b>Order</b>System</a>
   </div>
   <!-- /.login-logo -->
   <div class="login-box-body">
