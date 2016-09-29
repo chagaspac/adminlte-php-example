@@ -1,4 +1,5 @@
 <?php
+session_start();
 //include_once("../configs/config.php");
 include_once("../configs/db.php");
 $connection = Db::getInstance();
@@ -16,7 +17,7 @@ if(isset($_POST['solicitacao_id']) &&
   }else if($_POST['action'] == 'add'){
 
     $statement = $connection->prepare('INSERT INTO mensagem (descricao,usuario_id) VALUES(:descricao,:usuario_id)');
-    $statement->execute(array('descricao'=>$_POST['descricao'],'usuario_id'=>$_POST['usuario_id']));
+    $statement->execute(array('descricao'=>$_POST['descricao'],'usuario_id'=>$_SESSION['usuario']['id']));
     $msgId = $connection->lastInsertId();
 
     $statement = $connection->prepare('INSERT INTO solicitacao_mensagem(solicitacao_id,mensagem_id) VALUES(:solicitacao_id,:mensagem_id)');
@@ -28,6 +29,13 @@ if(isset($_POST['solicitacao_id']) &&
     $mensagens = $statement->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($mensagens);
+
+  }else if($_POST['action'] == 'assumir'){
+
+    $statement = $connection->prepare('UPDATE solicitacao SET usuario_atendente_id = :usu_id, status_id = (select id from status where nome = :status) WHERE id = :id');
+    $statement->execute(array('id'=>$_POST['solicitacao_id'],'usu_id'=>$_SESSION['usuario']['id'],'status'=>'Processando'));
+    
+    echo json_encode('{"resultado":"OK"}');
 
   }
 

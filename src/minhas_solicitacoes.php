@@ -9,7 +9,7 @@ if(isset($_POST['inputSolicitacaoId'])){
 
 
 
-$statement = $connection->prepare('SELECT s.id,s.dt_criacao, e.nome \'equipamento\', u.nome \'atendente\', st.nome \'status\', s.usuario_solicitante_id \'usuario_id\' FROM solicitacao s INNER JOIN equipamento e ON e.id = s.equipamento_id LEFT JOIN usuario u ON (u.id = s.usuario_atendente_id) INNER JOIN status st ON (st.id = s.status_id) where usuario_solicitante_id = :usu');
+$statement = $connection->prepare('SELECT s.id,DATE_FORMAT(s.dt_criacao, \'%d/%m/%Y %H:%i:%s\') \'dt_criacao\', e.nome \'equipamento\', u.nome \'atendente\', st.nome \'status\', s.usuario_solicitante_id \'usuario_id\' FROM solicitacao s INNER JOIN equipamento e ON e.id = s.equipamento_id LEFT JOIN usuario u ON (u.id = s.usuario_atendente_id) INNER JOIN status st ON (st.id = s.status_id) where usuario_solicitante_id = :usu');
 $statement->execute(array('usu'=>$_SESSION['usuario']['id']));
 $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
 
@@ -218,7 +218,7 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
       $.ajax({
         type: "POST",
         url: 'ajax/mensagem.php',
-        data: {'usuario_id':idUsuario, 'solicitacao_id':idSolicitacao, 'descricao':descricao, 'action':'add'},
+        data: {'solicitacao_id':idSolicitacao, 'descricao':descricao, 'action':'add'},
         success: function(result){
           console.log(result);
           var json = JSON.parse(result);

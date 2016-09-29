@@ -1,4 +1,5 @@
 <?php
+session_start();
 include_once("configs/config.php");
 $connection = Db::getInstance();
 

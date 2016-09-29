@@ -8,11 +8,10 @@ if(isset($_POST['inputSolicitacaoId'])){
 }
 
 
-
-$statement = $connection->prepare('SELECT s.id,s.dt_criacao, e.nome \'equipamento\', u.nome \'atendente\', st.nome \'status\', s.usuario_solicitante_id \'usuario_id\' FROM solicitacao s INNER JOIN equipamento e ON e.id = s.equipamento_id INNER JOIN usuario u ON (u.id = s.usuario_solicitante_id) INNER JOIN status st ON (st.id = s.status_id) where usuario_solicitante_id = :usu');
-$statement->execute(array('usu'=>$_SESSION['usuario']['id']));
+$statement = $connection->prepare('SELECT s.id, DATE_FORMAT(s.dt_criacao, \'%d/%m/%Y %H:%i:%s\') \'dt_criacao\', e.nome \'equipamento\', u.nome \'atendente\', st.nome \'status\', s.usuario_solicitante_id \'usuario_id\' FROM solicitacao s INNER JOIN equipamento e ON e.id = s.equipamento_id INNER JOIN usuario u ON (u.id = s.usuario_solicitante_id) INNER JOIN status st ON (st.id = s.status_id) where st.nome != :nome');
+$statement->execute(array('nome'=>'Concluída'));
 $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
-
+//Concluída
 
 
 ?><!DOCTYPE html>
@@ -82,8 +81,9 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
                   <th>#</th>
                   <th>Data da Solicitação</th>
                   <th>Equipamento</th>
-                  <th>Atentende</th>
+                  <th>Solicitante</th>
                   <th>Status</th>
+                  <th>Assumir</th>
                   <th>Acompanhar</th>
                 </tr>
               </thead>
@@ -91,13 +91,20 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
                 <?php
                 if(!empty($lista)){
                   foreach($lista as $item){
+                    $isDisabled = '';
+                    if($item['status'] != 'Pendente'){
+                      $isDisabled = 'disabled';
+                    }
                     echo '<tr>';
                     echo "<td>{$item['id']}</td>";
                     echo "<td>{$item['dt_criacao']}</td>";
                     echo "<td>{$item['equipamento']}</td>";
                     echo "<td>{$item['atendente']}</td>";
                     echo "<td>{$item['status']}</td>";
-                    echo "<td><button type='button' class='btn btn-primary' style='margin-bottom: 10px;' data-toggle='modal' data-target='#responderModal' onclick='getMessages({$item['id']},{$item['usuario_id']})'>
+                    echo "<td class='text-center'><button type='button' class='btn btn-danger' style='margin-bottom: 10px;' onclick='assumirSolicitacao({$item['id']})' $isDisabled>
+                    Assumir
+                  </button></td>";
+                    echo "<td class='text-center'><button type='button' class='btn btn-primary' style='margin-bottom: 10px;' data-toggle='modal' data-target='#responderModal' onclick='getMessages({$item['id']},{$item['usuario_id']})'>
                     Acompanhar
                   </button></td>";
                   echo '</tr>';
@@ -135,7 +142,7 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
             <input type="hidden" name="inputSolicitacaoId" id="inputSolicitacaoId" value="">
 
 
-            <div class="box-body chat" id="chat-box" style="overflow: hidden; width: auto; height: 250px;">
+            <div class="box-body chat" id="chat-box" style="width: auto; height: auto;">
 
 
 
@@ -218,7 +225,7 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
       $.ajax({
         type: "POST",
         url: 'ajax/mensagem.php',
-        data: {'usuario_id':idUsuario, 'solicitacao_id':idSolicitacao, 'descricao':descricao, 'action':'add'},
+        data: {'solicitacao_id':idSolicitacao, 'descricao':descricao, 'action':'add'},
         success: function(result){
           console.log(result);
           var json = JSON.parse(result);
@@ -235,7 +242,18 @@ $lista = $statement->fetchAll(PDO::FETCH_ASSOC);
               '</p>' +
               '</div>'
               );
+              $('#inputDescricao').val('');
           }
+        }
+      });
+    }
+    function assumirSolicitacao(idSolicitacao){
+      $.ajax({
+        type: "POST",
+        url: 'ajax/mensagem.php',
+        data: {'solicitacao_id':idSolicitacao, 'action':'assumir'},
+        success: function(result){
+          location.reload();
         }
       });
     }
